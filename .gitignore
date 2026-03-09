@@ -102,7 +102,6 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
 .venv
 env/
 venv/
@@ -133,7 +132,6 @@ dmypy.json
 *.joblib
 
 # IDE
-.vscode/
 .idea/
 *.swp
 *.swo
@@ -148,3 +146,5 @@ regression_model.pkl
 classification_model.pkl
 clustering_model.pkl
 model_generators/clustering/clustering_model.pkl
+config.bat
+node_modules
