@@ -1,0 +1,21 @@
+client_name,year,kilometers_driven,seating_capacity,estimated_income,selling_price,income_level
+John Doe,2022,15000,5,75000,25000,High
+Jane Smith,2021,25000,7,45000,18000,Medium
+Bob Johnson,2020,35000,5,35000,15000,Medium
+Alice Brown,2023,8000,5,95000,32000,High
+Charlie Wilson,2019,45000,7,25000,12000,Low
+Diana Davis,2022,20000,5,55000,22000,Medium
+Edward Miller,2021,30000,7,65000,28000,High
+Frank Garcia,2020,40000,5,30000,14000,Low
+Grace Martinez,2023,12000,7,85000,30000,High
+Henry Anderson,2019,50000,5,20000,10000,Low
+Ivy Taylor,2022,18000,5,70000,26000,High
+Jack Thomas,2021,28000,7,40000,17000,Medium
+Kate Jackson,2020,38000,5,32000,16000,Medium
+Liam White,2023,10000,7,90000,31000,High
+Mia Harris,2019,48000,5,22000,11000,Low
+Noah Martin,2022,22000,5,60000,24000,Medium
+Olivia Thompson,2021,32000,7,50000,19000,Medium
+Peter Garcia,2020,42000,5,28000,13000,Low
+Quinn Rodriguez,2023,14000,7,80000,29000,High
+Rachel Lewis,2019,52000,5,18000,9000,Low
