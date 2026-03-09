@@ -111,9 +111,17 @@
  <div
  class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
  <span class="fw-bold text-dark">Evaluation Metrics</span>
- <span class="badge bg-light text-primary border border-primary">
+ <div>
+ <span class="badge bg-light text-primary border border-primary me-2">
  Silhouette Score: {{evaluations.silhouette|safe }}
  </span>
+ <span class="badge bg-light text-success border border-success">
+ Coefficient of Variation: {{evaluations.coefficient_variation|safe }}
+ </span>
+ <span class="badge bg-light text-info border border-info">
+ Optimal Clusters: {{evaluations.optimal_clusters|safe }}
+ </span>
+ </div>
  </div>
  <div class="card-body"> 
  <div class="table-responsive">
