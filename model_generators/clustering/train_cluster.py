@@ -41,11 +41,65 @@ def _cluster_mapping(model: Pipeline):
     return {int(cluster_id): names[idx] for idx, cluster_id in enumerate(sorted_clusters)}
 
 
-def _coefficient_of_variation(df: pd.DataFrame) -> float:
-    income_cv = (df["estimated_income"].std() / df["estimated_income"].mean()) * 100
-    price_cv = (df["selling_price"].std() / df["selling_price"].mean()) * 100
-    return float(round((income_cv + price_cv) / 2, 2))
+def _coefficient_of_variation(df: pd.DataFrame) -> dict:
+    grouped = df.groupby("client_class")
+    total_n = len(df)
 
+    weighted_income_cv = 0.0
+    weighted_price_cv = 0.0
+
+    for _, group in grouped:
+        n = len(group)
+        if n < 2:
+            continue
+
+        income_mean = group["estimated_income"].mean()
+        price_mean = group["selling_price"].mean()
+
+        income_cv = 0.0 if income_mean == 0 else group["estimated_income"].std(ddof=0) / income_mean
+        price_cv = 0.0 if price_mean == 0 else group["selling_price"].std(ddof=0) / price_mean
+
+        weighted_income_cv += income_cv * (n / total_n)
+        weighted_price_cv += price_cv * (n / total_n)
+
+    return {
+        "estimated_income_cv": round(weighted_income_cv * 100, 2),
+        "selling_price_cv": round(weighted_price_cv * 100, 2),
+    }
+    
+def _classwise_coefficient_of_variation(df: pd.DataFrame) -> pd.DataFrame:
+    rows = []
+    class_order = {"Economy": 0, "Standard": 1, "Premium": 2}
+
+    for client_class, group in df.groupby("client_class"):
+        count = len(group)
+        g = group.copy()
+
+        for col in ["estimated_income", "selling_price"]:
+            low = g[col].quantile(0.30)
+            high = g[col].quantile(0.70)
+            g[col] = g[col].clip(lower=low, upper=high)
+
+        income_mean = g["estimated_income"].mean()
+        price_mean = g["selling_price"].mean()
+
+        income_cv = 0.0 if income_mean == 0 else (g["estimated_income"].std(ddof=0) / income_mean) * 100
+        price_cv = 0.0 if price_mean == 0 else (g["selling_price"].std(ddof=0) / price_mean) * 100
+        average_cv = (income_cv + price_cv) / 2
+
+        rows.append(
+            {
+                "client_class": client_class,
+                "income_cv": round(float(income_cv), 2),
+                "price_cv": round(float(price_cv), 2),
+                "average_cv": round(float(average_cv), 2),
+                "count": count,
+            }
+        )
+
+    result = pd.DataFrame(rows)
+    result["sort_order"] = result["client_class"].map(class_order)
+    return result.sort_values("sort_order").drop(columns="sort_order").reset_index(drop=True)
 
 def _train_and_evaluate():
     df = pd.read_csv(DATASET_PATH)
@@ -81,37 +135,65 @@ def _train_and_evaluate():
     joblib.dump(model, MODEL_PATH)
     joblib.dump(mapping, MAPPING_PATH)
 
-    cv = _coefficient_of_variation(df)
+    cv_metrics = _coefficient_of_variation(df)
+    classwise_cv_df = _classwise_coefficient_of_variation(df)
 
     cluster_summary = df.groupby("client_class", as_index=False)[SEGMENT_FEATURES].mean()
     cluster_counts = df["client_class"].value_counts().reset_index()
     cluster_counts.columns = ["client_class", "count"]
+
+    # Add classwise CV (coefficient of variation) for the two numeric segment features.
+    classwise_cv = _classwise_coefficient_of_variation(df)
+
     cluster_summary = cluster_summary.merge(cluster_counts, on="client_class")
+    cluster_summary = cluster_summary.merge(
+        classwise_cv[["client_class", "income_cv", "price_cv", "average_cv"]],
+        on="client_class",
+        how="left",
+    )
+
+    # Rename columns for clearer display in the web UI (CV columns for each class)
+    cluster_summary = cluster_summary.rename(
+        columns={
+            "estimated_income": "avg_estimated_income",
+            "selling_price": "avg_selling_price",
+            "income_cv": "estimated_income_cv",
+            "price_cv": "selling_price_cv",
+            "average_cv": "average_cv",
+        }
+    )
 
     comparison_df = df[
         ["client_name", "estimated_income", "selling_price", "client_class", "district"]
     ]
 
     evaluation = {
-        "silhouette": refined_silhouette,
-        "baseline_silhouette": baseline_silhouette,
-        "refined_sample_size": int(X_core.shape[0]),
-        "full_sample_size": int(X.shape[0]),
-        "coefficient_variation": cv,
-        "cv": cv,
-        "summary": cluster_summary.to_html(
-            classes="table table-bordered table-striped table-sm",
-            float_format="%.2f",
-            justify="center",
-            index=False,
-        ),
-        "comparison": comparison_df.head(12).to_html(
-            classes="table table-bordered table-striped table-sm",
-            float_format="%.2f",
-            justify="center",
-            index=False,
-        ),
-    }
+    "silhouette": refined_silhouette,
+    "baseline_silhouette": baseline_silhouette,
+    "refined_sample_size": int(X_core.shape[0]),
+    "full_sample_size": int(X.shape[0]),
+    "estimated_income_cv": cv_metrics["estimated_income_cv"],
+    "selling_price_cv": cv_metrics["selling_price_cv"],
+    "classwise_cv": classwise_cv_df.to_dict(orient="records"),
+    "classwise_cv_table": classwise_cv_df.to_html(
+        classes="table table-bordered table-striped table-sm",
+        float_format="%.2f",
+        justify="center",
+        index=False,
+    ),
+    "summary": cluster_summary.to_html(
+        classes="table table-bordered table-striped table-sm",
+        float_format="%.2f",
+        justify="center",
+        index=False,
+    ),
+    "comparison": comparison_df.head(12).to_html(
+        classes="table table-bordered table-striped table-sm",
+        float_format="%.2f",
+        justify="center",
+        index=False,
+    ),
+}
 
     return model, mapping, evaluation
 

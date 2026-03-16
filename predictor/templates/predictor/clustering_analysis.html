@@ -99,12 +99,19 @@
                         <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
                             <span class="fw-bold text-dark">Evaluation Metrics</span>
                             <span class="badge bg-light text-primary border border-primary">
-                                Silhouette Score: {{ evaluations.silhouette|safe }} &nbsp; | &nbsp; CV: {{ evaluations.cv|safe }}
+                                Silhouette Score: {{ evaluations.silhouette|safe }} &nbsp; | &nbsp; CV Estimated: {{ evaluations.estimated_income_cv|safe }} &nbsp; | &nbsp; CV Selling: {{ evaluations.selling_price_cv|safe }}
                             </span>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
                                 {{ evaluations.summary|safe }}
+                            </div>
+
+                            <div class="mt-4">
+                                <h6 class="fw-semibold">Cluster-class Coefficient of Variation</h6>
+                                <div class="table-responsive">
+                                    {{ evaluations.classwise_cv_table|safe }}
+                                </div>
                             </div>
                         </div>
                     </div>
