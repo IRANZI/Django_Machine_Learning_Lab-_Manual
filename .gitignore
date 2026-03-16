@@ -2,13 +2,11 @@ venv/
 __pycache__/
 *.pyc
 db.sqlite3
-.env
 .env/
 .env/*
 .venv/
 env/
 ENV/
-.vscode/
 .idea/
 .pytest_cache/
 .mypy_cache/
@@ -30,3 +28,5 @@ model_generators/**/find_best_clustering_report.csv
 # Mac/Windows system files
 Thumbs.db
 ehthumbs.db
+config.bat
+node_modules
